@@ -3,6 +3,7 @@ import type { AppView, ParsedDocument } from './types';
 import { useHardwareProfile } from './ui/hooks/useHardwareProfile';
 import { useInference } from './ui/hooks/useInference';
 import { useConstitution } from './ui/hooks/useConstitution';
+import { useSpeculativeDecoding } from './ui/hooks/useSpeculativeDecoding';
 import { parseFile } from './engine';
 import { deleteDocument, loadDocuments } from './storage/opfs-store';
 
@@ -21,6 +22,7 @@ function App() {
   const hardware = useHardwareProfile();
   const inference = useInference();
   const constitution = useConstitution();
+  const speculative = useSpeculativeDecoding();
 
   // Load persisted documents on mount
   useEffect(() => {
@@ -90,6 +92,8 @@ function App() {
           <SettingsView
             progress={inference.progress}
             onLoadModel={inference.loadModel}
+            specState={speculative.state}
+            onLoadSpecModels={speculative.loadModels}
           />
         );
       default:
