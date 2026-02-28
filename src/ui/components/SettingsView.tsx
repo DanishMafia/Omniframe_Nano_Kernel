@@ -13,6 +13,7 @@ interface SettingsViewProps {
     loadedPair: ModelPair | null;
   };
   onLoadSpecModels: (pair: ModelPair) => Promise<void>;
+  recommendedModelId?: string | null;
 }
 
 export function SettingsView({
@@ -20,22 +21,26 @@ export function SettingsView({
   onLoadModel,
   specState,
   onLoadSpecModels,
+  recommendedModelId,
 }: SettingsViewProps) {
   const [selectedModel, setSelectedModel] = useState(
-    progress.modelId ?? AVAILABLE_MODELS[0].id,
+    progress.modelId ?? recommendedModelId ?? AVAILABLE_MODELS[0].id,
   );
   const [selectedPairIdx, setSelectedPairIdx] = useState(0);
 
+  const isLoading = progress.status === 'loading-model';
+  const isSpecLoading = specState.status === 'loading-model';
+  const isAnyLoading = isLoading || isSpecLoading;
+
   const handleLoad = () => {
+    if (isAnyLoading) return;
     onLoadModel(selectedModel);
   };
 
   const handleLoadSpec = () => {
+    if (isAnyLoading) return;
     onLoadSpecModels(MODEL_PAIRS[selectedPairIdx].pair);
   };
-
-  const isLoading = progress.status === 'loading-model';
-  const isSpecLoading = specState.status === 'loading-model';
   const isSpecReady = specState.status === 'ready';
 
   return (
@@ -74,7 +79,14 @@ export function SettingsView({
                 }`}
               />
               <div className="flex-1">
-                <p className="text-sm text-white/80">{model.name}</p>
+                <p className="text-sm text-white/80">
+                  {model.name}
+                  {recommendedModelId === model.id && (
+                    <span className="ml-2 px-1.5 py-0.5 text-[9px] bg-indigo-500/20 text-indigo-300 rounded font-mono">
+                      RECOMMENDED
+                    </span>
+                  )}
+                </p>
                 <p className="text-[10px] text-white/30 font-mono">
                   {model.size} &middot; {model.quantization} &middot;{' '}
                   {(model.requiredVRAM / 1024 ** 3).toFixed(0)}GB VRAM
@@ -89,14 +101,16 @@ export function SettingsView({
 
         <button
           onClick={handleLoad}
-          disabled={isLoading}
+          disabled={isAnyLoading}
           className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/30 rounded-lg text-sm font-medium text-white transition-colors"
         >
           {isLoading
             ? `Loading... ${Math.round(progress.loadProgress * 100)}%`
-            : progress.modelId === selectedModel && progress.status === 'ready'
-              ? 'Reload Model'
-              : 'Load Model'}
+            : isSpecLoading
+              ? 'Pair loading...'
+              : progress.modelId === selectedModel && progress.status === 'ready'
+                ? 'Reload Model'
+                : 'Load Model'}
         </button>
 
         {progress.error && (
@@ -185,14 +199,16 @@ export function SettingsView({
 
         <button
           onClick={handleLoadSpec}
-          disabled={isSpecLoading}
+          disabled={isAnyLoading}
           className="w-full py-2.5 bg-amber-600 hover:bg-amber-500 disabled:bg-amber-600/30 rounded-lg text-sm font-medium text-white transition-colors"
         >
           {isSpecLoading
             ? 'Loading models...'
-            : isSpecReady
-              ? 'Reload Pair'
-              : 'Load Model Pair'}
+            : isLoading
+              ? 'Model loading...'
+              : isSpecReady
+                ? 'Reload Pair'
+                : 'Load Model Pair'}
         </button>
 
         {/* Live stats (shown when speculative decoding has been used) */}

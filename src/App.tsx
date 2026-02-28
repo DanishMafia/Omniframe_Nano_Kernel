@@ -4,7 +4,7 @@ import { useHardwareProfile } from './ui/hooks/useHardwareProfile';
 import { useInference } from './ui/hooks/useInference';
 import { useConstitution } from './ui/hooks/useConstitution';
 import { useSpeculativeDecoding } from './ui/hooks/useSpeculativeDecoding';
-import { parseFile } from './engine';
+import { parseFile, recommendModel } from './engine';
 import { deleteDocument, loadDocuments } from './storage/opfs-store';
 
 import { Sidebar } from './ui/components/Sidebar';
@@ -18,11 +18,14 @@ import { SettingsView } from './ui/components/SettingsView';
 function App() {
   const [view, setView] = useState<AppView>('chat');
   const [documents, setDocuments] = useState<ParsedDocument[]>([]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const hardware = useHardwareProfile();
   const inference = useInference();
   const constitution = useConstitution();
   const speculative = useSpeculativeDecoding();
+
+  const recommendedModelId = hardware.profile ? recommendModel(hardware.profile) : null;
 
   // Load persisted documents on mount
   useEffect(() => {
@@ -94,6 +97,7 @@ function App() {
             onLoadModel={inference.loadModel}
             specState={speculative.state}
             onLoadSpecModels={speculative.loadModels}
+            recommendedModelId={recommendedModelId}
           />
         );
       default:
@@ -107,6 +111,8 @@ function App() {
         currentView={view}
         onNavigate={setView}
         modelStatus={inference.progress.status}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
       />
       <main className="flex-1 min-w-0 overflow-hidden">
         {renderView()}
