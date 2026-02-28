@@ -21,7 +21,23 @@ export function useInference() {
   }, []);
 
   const loadModel = useCallback(async (modelId: string) => {
-    await inferenceEngine.loadModel(modelId);
+    try {
+      await inferenceEngine.loadModel(modelId);
+    } catch (err) {
+      // On crash/error, clean up and reset to safe state
+      try {
+        await inferenceEngine.unload();
+      } catch {
+        // Ignore cleanup errors
+      }
+      setProgress({
+        status: 'error',
+        modelId: null,
+        loadProgress: 0,
+        tokensPerSecond: 0,
+        error: err instanceof Error ? err.message : 'Model loading failed. Try again or choose a smaller model.',
+      });
+    }
   }, []);
 
   const sendMessage = useCallback(
@@ -76,6 +92,7 @@ export function useInference() {
             timestamp: Date.now(),
           };
           setMessages((prev) => [...prev, errorMsg]);
+          setStreamingContent('');
         }
       }
     },

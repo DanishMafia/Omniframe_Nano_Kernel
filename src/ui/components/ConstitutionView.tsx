@@ -18,6 +18,93 @@ const CATEGORIES: ConstitutionRule['category'][] = [
   'context',
 ];
 
+interface LanguagePreset {
+  label: string;
+  flag: string;
+  rules: Omit<ConstitutionRule, 'id' | 'createdAt'>[];
+}
+
+const LANGUAGE_PRESETS: LanguagePreset[] = [
+  {
+    label: 'Dansk',
+    flag: 'DK',
+    rules: [
+      {
+        category: 'preference',
+        priority: 2,
+        content: 'Svar altid pa dansk. Brug et naturligt, uformelt dansk sprog med korrekt grammatik.',
+        enabled: true,
+      },
+      {
+        category: 'personality',
+        priority: 2,
+        content: 'Du er en hjaelpsom AI-assistent der kommunikerer pa dansk. Vaer direkte, venlig og praecis.',
+        enabled: true,
+      },
+    ],
+  },
+  {
+    label: 'English',
+    flag: 'US',
+    rules: [
+      {
+        category: 'preference',
+        priority: 2,
+        content: 'Always respond in English. Use clear, concise language.',
+        enabled: true,
+      },
+    ],
+  },
+  {
+    label: 'Deutsch',
+    flag: 'DE',
+    rules: [
+      {
+        category: 'preference',
+        priority: 2,
+        content: 'Antworte immer auf Deutsch. Verwende eine klare, natuerliche Sprache mit korrekter Grammatik.',
+        enabled: true,
+      },
+      {
+        category: 'personality',
+        priority: 2,
+        content: 'Du bist ein hilfreicher KI-Assistent der auf Deutsch kommuniziert. Sei direkt, freundlich und praezise.',
+        enabled: true,
+      },
+    ],
+  },
+  {
+    label: 'Concise',
+    flag: '--',
+    rules: [
+      {
+        category: 'constraint',
+        priority: 1,
+        content: 'Keep responses extremely brief. Use bullet points. Maximum 3 sentences unless asked for more detail.',
+        enabled: true,
+      },
+    ],
+  },
+  {
+    label: 'Coding',
+    flag: '<>',
+    rules: [
+      {
+        category: 'personality',
+        priority: 2,
+        content: 'You are a senior software engineer. Provide code-first responses with minimal explanation. Use best practices and modern patterns.',
+        enabled: true,
+      },
+      {
+        category: 'constraint',
+        priority: 2,
+        content: 'When showing code, always specify the language. Prefer TypeScript over JavaScript. Include error handling.',
+        enabled: true,
+      },
+    ],
+  },
+];
+
 export function ConstitutionView({
   constitution,
   compiledPrompt,
@@ -52,12 +139,18 @@ export function ConstitutionView({
     setNewContent('');
   };
 
+  const handleApplyPreset = (preset: LanguagePreset) => {
+    for (const rule of preset.rules) {
+      onAddRule(rule);
+    }
+  };
+
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6 overflow-y-auto h-full">
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-4 sm:space-y-6 overflow-y-auto h-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-sm font-semibold text-white/90">Memory Constitution</h2>
-          <p className="text-[11px] text-white/30 mt-0.5">
+          <p className="text-[10px] text-white/30 mt-0.5">
             v{constitution?.version ?? 1} &middot; {rules.length} rules &middot;{' '}
             {rules.filter((r) => r.enabled).length} active
           </p>
@@ -72,12 +165,29 @@ export function ConstitutionView({
 
       {/* Compiled prompt preview */}
       {showCompiled && (
-        <div className="bg-black/30 border border-white/10 rounded-lg p-4 max-h-60 overflow-y-auto">
-          <pre className="text-[11px] text-white/50 font-mono whitespace-pre-wrap">
+        <div className="bg-black/30 border border-white/10 rounded-lg p-3 max-h-48 overflow-y-auto">
+          <pre className="text-[10px] text-white/50 font-mono whitespace-pre-wrap break-words">
             {compiledPrompt || '(empty — no active rules)'}
           </pre>
         </div>
       )}
+
+      {/* Language / style presets */}
+      <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 space-y-3">
+        <h3 className="text-xs font-medium text-white/50">Quick Presets</h3>
+        <div className="flex flex-wrap gap-2">
+          {LANGUAGE_PRESETS.map((preset) => (
+            <button
+              key={preset.label}
+              onClick={() => handleApplyPreset(preset)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg text-xs text-white/70 hover:text-white/90 transition-colors"
+            >
+              <span className="text-[10px] font-mono text-white/40">{preset.flag}</span>
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Existing rules */}
       <div className="space-y-2">
@@ -88,15 +198,15 @@ export function ConstitutionView({
               rule.enabled ? 'border-white/10' : 'border-white/5 opacity-40'
             }`}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-mono uppercase text-indigo-400/60 bg-indigo-500/10 px-1.5 py-0.5 rounded">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[9px] font-mono uppercase text-indigo-400/60 bg-indigo-500/10 px-1.5 py-0.5 rounded">
                     {rule.category}
                   </span>
-                  <span className="text-[10px] font-mono text-white/20">P{rule.priority}</span>
+                  <span className="text-[9px] font-mono text-white/20">P{rule.priority}</span>
                 </div>
-                <p className="text-xs text-white/70 leading-relaxed">{rule.content}</p>
+                <p className="text-xs text-white/70 leading-relaxed break-words">{rule.content}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <button
@@ -124,7 +234,7 @@ export function ConstitutionView({
       </div>
 
       {/* Add new rule */}
-      <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+      <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 space-y-3">
         <h3 className="text-xs font-medium text-white/50">Add Rule</h3>
         <textarea
           value={newContent}
@@ -133,7 +243,7 @@ export function ConstitutionView({
           rows={2}
           className="w-full bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 placeholder-white/20 resize-none focus:outline-none focus:border-indigo-500/50"
         />
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <select
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value as ConstitutionRule['category'])}
@@ -146,14 +256,14 @@ export function ConstitutionView({
             ))}
           </select>
           <div className="flex items-center gap-1">
-            <span className="text-[10px] text-white/30">Priority</span>
+            <span className="text-[10px] text-white/30">P</span>
             <input
               type="number"
               min={1}
               max={10}
               value={newPriority}
               onChange={(e) => setNewPriority(Number(e.target.value))}
-              className="w-12 bg-black/20 border border-white/10 rounded px-2 py-1 text-xs text-white/70 text-center focus:outline-none"
+              className="w-10 bg-black/20 border border-white/10 rounded px-1.5 py-1 text-xs text-white/70 text-center focus:outline-none"
             />
           </div>
           <button

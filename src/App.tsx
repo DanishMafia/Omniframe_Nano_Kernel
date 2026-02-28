@@ -18,7 +18,8 @@ import { SettingsView } from './ui/components/SettingsView';
 function App() {
   const [view, setView] = useState<AppView>('chat');
   const [documents, setDocuments] = useState<ParsedDocument[]>([]);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Default collapsed on mobile
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768);
 
   const hardware = useHardwareProfile();
   const inference = useInference();
@@ -106,7 +107,7 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0a0a0f]">
+    <div className="flex h-[100dvh] bg-[#0a0a0f] overflow-hidden">
       <Sidebar
         currentView={view}
         onNavigate={setView}

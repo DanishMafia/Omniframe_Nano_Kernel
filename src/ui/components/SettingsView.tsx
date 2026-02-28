@@ -44,7 +44,7 @@ export function SettingsView({
   const isSpecReady = specState.status === 'ready';
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6 overflow-y-auto h-full">
+    <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-4 sm:space-y-6 overflow-y-auto h-full">
       <h2 className="text-sm font-semibold text-white/90">Settings</h2>
 
       {/* Standard model selection */}
